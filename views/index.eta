@@ -1,0 +1,233 @@
+<% layout("./generaltemplate") %>
+
+<div class="w3-bar w3-top w3-black w3-large" style="z-index:4">
+  <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i></button>
+  <a href="/"><span class="w3-bar-item w3-right">UAX</span></a>
+</div>
+
+<!-- Sidebar/menu -->
+<nav class="w3-sidebar w3-collapse w3-white w3-animate-left" style="z-index:3;width:300px;" id="mySidebar"><br>
+  <div class="w3-bar-block">
+    <a href="#overview" class="w3-bar-item w3-button w3-padding w3-round"><i class="fa fa-tachometer fa-fw"></i>
+      APIs Overview</a>
+    <a href="#metrics" class="w3-bar-item w3-button w3-padding w3-round"><i class="fa fa-bar-chart fa-fw"></i>
+      Metrics</a>
+  </div>
+</nav>
+
+<!-- Overlay effect when opening sidebar on small screens -->
+<div class="w3-overlay w3-hide-large w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<% function rowDivision(keysChunks){ switch(keysChunks.length){ case 2: return 'w3-half' ; case 3: return 'w3-third' ;
+    default: return '' ; } } %>
+
+<!-- Main section -->
+<div class="w3-main" style="margin-left:300px;margin-top:43px;padding-top:7px;">
+
+  <div class="w3-row-padding w3-margin-bottom">
+    <div id="overview">
+      <div class="w3-container w3-white w3-text-grey w3-card-4 w3-padding-16 w3-round">
+        <div class="w3-row">
+          <% it.chunkOfKeys.forEach(function(chunk) { let chunkClass=rowDivision(chunk); chunk.forEach(function(key)
+              {%>
+          <div class="w3-container w3-center <%= chunkClass %>">
+            <h3><b> <%= key %> </b></h3>
+            <div id="overview-chart-<%= key %>"></div>
+            <button class="w3-button w3-white w3-large" style="padding-top:0;" onclick="document.getElementById('modal_<%= key%>').style.display='block'">
+              <b class="scores"><%= it.projectScores[key].toFixed(2) %> <i class="fa fa-external-link w3-tiny"></i></b>
+            </button>
+            <p style="margin-top: 0;">Overall score</p>
+          </div>
+
+          <!-- insert modal -->
+          <div id="modal_<%= key %>" class="w3-modal">
+            <div class="w3-modal-content">
+              <header class="w3-container w3-light-grey w3-border-bottom">
+                <span onclick="document.getElementById('modal_<%= key %>').style.display='none'" class="w3-button w3-display-topright">&times;</span>
+                <h2><%= key %></h2>
+              </header>
+              <div class="w3-container" style="overflow: scroll;">
+                <div class="w3-row">
+                  <div class="w3-half w3-container">
+
+                    <div class="w3-display-container" style="height:300px;">
+                      <div class="w3-display-middle">
+                        <h1 class="modal-score" style="font-weight: bold !important;"><%= it.projectScores[key].toFixed(2) %></h1>
+                        <% let orderedResults =
+                        [...it.resultsProject[key]].sort((a,b) => (b.score || b.usabilityResult.score) - (a.score || a.usabilityResult.score)); %>
+                        <p>Best Metric: <%= orderedResults[0].metric %></p>
+                        <p>Worst Metric: <%= orderedResults[orderedResults.length - 1].metric %></p>
+                      </div>
+                    </div>
+
+
+                  </div>
+                  <div class="w3-half">
+                    <%
+                    it.resultsProject[key].forEach(metricResult => {
+                    let score = (metricResult.score || metricResult.usabilityResult.score);
+                    let transformedScore = (score * 100).toFixed(2);
+                    %>
+                    <p><%= metricResult.metric %></p>
+                    <div class="w3-light-grey w3-round-xlarge w3-small">
+                      <div class="w3-container w3-center w3-round-xlarge w3-text-white modal-scores" style="width:<%= transformedScore%>%"><%= score.toFixed(2) %>%</div>
+                    </div>
+                    <%});%>
+                  </div>
+                </div>
+                <div class="w3-padding-16"> <%~ include("./usabilityrange")%> </div>
+              </div>
+            </div>
+          </div>
+
+          <% }); }); %>
+        </div>
+        <%~ include("./usabilityrange")%>
+      </div>
+    </div>
+
+
+    <div class="w3-container w3-card w3-white w3-margin-top w3-padding-16 w3-round" id="metrics">
+      <div class="w3-container">
+        <h5 class="w3-opacity"><b> Metrics </b></h5>
+        <div id="metrics-chart"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Get the Sidebar
+  var mySidebar = document.getElementById("mySidebar");
+
+  // Get the DIV with overlay effect
+  var overlayBg = document.getElementById("myOverlay");
+
+  // Toggle between showing and hiding the sidebar, and add overlay effect
+  function w3_open() {
+    if (mySidebar.style.display === 'block') {
+      mySidebar.style.display = 'none';
+      overlayBg.style.display = "none";
+    } else {
+      mySidebar.style.display = 'block';
+      overlayBg.style.display = "block";
+    }
+  }
+
+  // Close the sidebar with the close button
+  function w3_close() {
+    mySidebar.style.display = "none";
+    overlayBg.style.display = "none";
+  }
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let options, chart;
+    <% Object.keys(it.resultsProject).forEach(projectKey => { %>
+    options = {
+      chart: {
+        type: 'radar',
+        height: '200px',
+        parentHeightOffset: 0,
+      },
+      markers: {
+        discrete: [<%= it.resultsProject[projectKey]
+                .map(metricResult => metricResult.score || metricResult.usabilityResult.score).join(',') %>]
+          .map((score, i) => {
+            return {
+              seriesIndex: 0,
+              dataPointIndex: i,
+              fillColor: colorScale[scoreRange(scaleToLikert(score))],
+              strokeColor: colorScale[scoreRange(scaleToLikert(score))],
+              size: 6,
+              shape: "circle"
+            };
+          })
+      },
+      series: [{
+        name: "<%= projectKey %>",
+        data: [<%= it.resultsProject[projectKey]
+                .map(metricResult => metricResult.score || metricResult.usabilityResult.score).join(',') %>]
+      }],
+      yaxis: {
+        show: false
+      },
+      labels: [<% ~ "\'" + it.resultsProject[projectKey].map(metricResult => metricResult.metric).join("\',\'") + "\'" %>]
+    }
+
+    chart = new ApexCharts(document.getElementById("overview-chart-<%= projectKey %>"), options);
+
+    chart.render();
+    <%}); %>
+
+    options = {
+      chart: {
+        type: 'bar',
+        height: '350px',
+        parentHeightOffset: 0,
+        events: {
+          dataPointSelection: (event, chartContext, config) => {
+            // https://stackoverflow.com/questions/40752434/how-to-tell-between-undefined-array-elements-and-empty-slots
+            let selected = config.selectedDataPoints;
+            selected = selected.filter((_, i) => i in config.selectedDataPoints);
+
+            //console.log(selected[0], config.seriesIndex);
+            console.log(config.w.config.xaxis.categories[selected[0]],
+              config.w.config.series[config.seriesIndex].name);
+          }
+        }
+      },
+      series: [
+        <% Object.keys(it.resultsProject).forEach(projectKey => { %> {
+          name: '<%= projectKey %>',
+          data: [
+            <% it.resultsProject[projectKey].forEach(metricResult => { %> {
+              x: '<%= metricResult.metric %>',
+              y: <%= (metricResult.score || metricResult.usabilityResult.score) %>
+            },
+            <% });%>
+          ]
+        },
+        <%}); %>
+      ],
+      yaxis: {
+        show: false
+      },
+      xaxis: {
+        categories: [<%~ Object.keys(it.resultsMetric).map( metricName => `\'${metricName}\'`).join(',') %>]
+      },
+      dataLabels: {
+        enabled: false
+      }
+    }
+
+    chart = new ApexCharts(document.getElementById("metrics-chart"), options);
+
+    chart.render();
+
+    let overallScores = document.querySelectorAll('.scores');
+    for (let i = 0; i < overallScores.length; i++) {
+      overallScores[i].style.color = colorScale[scoreRange(scaleToLikert(Number(overallScores[i].innerHTML)))];
+    }
+
+    let modalScore = document.querySelectorAll('.modal-score');
+    for (let i = 0; i < modalScore.length; i++) {
+      modalScore[i].style.color = colorScale[scoreRange(scaleToLikert(Number(modalScore[i].innerHTML)))];
+    }
+
+    let modalScores = document.querySelectorAll('.modal-scores');
+    for (let i = 0; i < modalScores.length; i++) {
+      let innerContent = modalScores[i].innerHTML;
+      innerContent = parseFloat(innerContent.replace(/[^\d.-]/g, ''));
+      modalScores[i].style.backgroundColor = colorScale[scoreRange(scaleToLikert(innerContent))];
+    }
+
+    let usabilityLevels = document.querySelectorAll('.usability-levels');
+    for (let i = 0; i < usabilityLevels.length; i++) {
+      let color = colorScale[i % 5];
+      usabilityLevels[i].style.color = usabilityLevels[i].style.backgroundColor = color;
+    }
+  });
+</script>

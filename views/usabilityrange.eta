@@ -1,0 +1,9 @@
+<div class="w3-row w3-center">
+  <b>Very low usability </b>
+  <span class="w3-tag w3-small usability-levels">tag</span>
+  <span class="w3-tag w3-small usability-levels">tag</span>
+  <span class="w3-tag w3-small usability-levels">tag</span>
+  <span class="w3-tag w3-small usability-levels">tag</span>
+  <span class="w3-tag w3-small usability-levels">tag</span>
+  <b> Very high usability</b>
+</div>
