@@ -1,6 +1,6 @@
 <% layout("./generaltemplate") %>
 
-<div class="w3-bar w3-top w3-black w3-large" style="z-index:4">
+<div class="w3-bar w3-top w3-black w3-large" style="z-index:12">
   <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i></button>
   <a href="/"><span class="w3-bar-item w3-right">UAX</span></a>
 </div>
@@ -39,28 +39,24 @@
             <p style="margin-top: 0;">Overall score</p>
           </div>
 
-          <!-- insert modal -->
+          <!-- create a modal to offer an alternative view of the data -->
           <div id="modal_<%= key %>" class="w3-modal">
             <div class="w3-modal-content">
               <header class="w3-container w3-light-grey w3-border-bottom">
                 <span onclick="document.getElementById('modal_<%= key %>').style.display='none'" class="w3-button w3-display-topright">&times;</span>
                 <h2><%= key %></h2>
               </header>
+
               <div class="w3-container" style="overflow: scroll;">
                 <div class="w3-row">
-                  <div class="w3-half w3-container">
+                  <div class="w3-half w3-container w3-center">
 
-                    <div class="w3-display-container" style="height:300px;">
-                      <div class="w3-display-middle">
-                        <h1 class="modal-score" style="font-weight: bold !important;"><%= it.projectScores[key].toFixed(2) %></h1>
-                        <% let orderedResults =
+                    <div id="modal-score-<%= key %>"></div>
+                    <% let orderedResults =
                         [...it.resultsProject[key]].sort((a,b) => (b.score || b.usabilityResult.score) - (a.score || a.usabilityResult.score)); %>
-                        <p>Best Metric: <%= orderedResults[0].metric %></p>
-                        <p>Worst Metric: <%= orderedResults[orderedResults.length - 1].metric %></p>
-                      </div>
-                    </div>
-
-
+                    <p><b>Best Metric:</b> <%= orderedResults[0].metric %></p>
+                    <p><b>Worst Metric:</b> <%= orderedResults[orderedResults.length - 1].metric %></p>
+                    
                   </div>
                   <div class="w3-half">
                     <%
@@ -70,7 +66,7 @@
                     %>
                     <p><%= metricResult.metric %></p>
                     <div class="w3-light-grey w3-round-xlarge w3-small">
-                      <div class="w3-container w3-center w3-round-xlarge w3-text-white modal-scores" style="width:<%= transformedScore%>%"><%= score.toFixed(2) %>%</div>
+                      <div class="w3-container w3-center w3-round-xlarge w3-text-white modal-scores" style="width:<%= transformedScore%>%"><%= score.toFixed(2) %></div>
                     </div>
                     <%});%>
                   </div>
@@ -125,6 +121,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     let options, chart;
+
     <% Object.keys(it.resultsProject).forEach(projectKey => { %>
     options = {
       chart: {
@@ -155,11 +152,69 @@
         show: false
       },
       labels: [<% ~ "\'" + it.resultsProject[projectKey].map(metricResult => metricResult.metric).join("\',\'") + "\'" %>]
-    }
+    };
 
     chart = new ApexCharts(document.getElementById("overview-chart-<%= projectKey %>"), options);
 
     chart.render();
+
+    options = {
+      chart: {
+        height: 380,
+        type: "radialBar"
+      },
+      series: [<%= (it.projectScores[projectKey] * 100).toFixed(2) %>],
+      colors: [colorScale[scoreRange(scaleToLikert(<%= it.projectScores[projectKey] %>))]],
+      plotOptions: {
+        radialBar: {
+          startAngle: -135,
+          endAngle: 135,
+          track: {
+            startAngle: -135,
+            endAngle: 135,
+          },
+          dataLabels: {
+            name: {
+              show: true,
+            },
+            value: {
+              fontSize: "30px",
+              show: true,
+              formatter: function(val) {
+                return <%= (it.projectScores[projectKey]).toFixed(2) %>;
+              }
+            }
+          }
+        }
+      },
+      stroke: {
+        lineCap: "butt",
+      },
+      labels: [levelScale[scoreRange(scaleToLikert(<%= it.projectScores[projectKey] %>))]],
+      responsive: [{
+        breakpoint: 1000,
+        options: {
+          plotOptions: {
+            radialBar: {
+              dataLabels: {
+                name: {
+                  show: false,
+                },
+                value: {
+                  fontSize: "17px",
+                  show: true
+                }
+              }
+            }
+          }
+        }
+      }]
+    };
+
+    chart = new ApexCharts(document.getElementById("modal-score-<%= projectKey %>"), options);
+
+    chart.render();
+
     <%}); %>
 
     options = {
@@ -208,7 +263,7 @@
     chart.render();
 
     // changes colors of the API scores in the main page and in the modals
-    let overallScores = document.querySelectorAll('.scores,.modal-score');
+    let overallScores = document.querySelectorAll('.scores');
     for (let i = 0; i < overallScores.length; i++) {
       overallScores[i].style.color = colorScale[scoreRange(scaleToLikert(Number(overallScores[i].innerHTML)))];
     }
