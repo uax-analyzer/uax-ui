@@ -207,23 +207,21 @@
 
     chart.render();
 
-    let overallScores = document.querySelectorAll('.scores');
+    // changes colors of the API scores in the main page and in the modals
+    let overallScores = document.querySelectorAll('.scores,.modal-score');
     for (let i = 0; i < overallScores.length; i++) {
       overallScores[i].style.color = colorScale[scoreRange(scaleToLikert(Number(overallScores[i].innerHTML)))];
-    }
-
-    let modalScore = document.querySelectorAll('.modal-score');
-    for (let i = 0; i < modalScore.length; i++) {
-      modalScore[i].style.color = colorScale[scoreRange(scaleToLikert(Number(modalScore[i].innerHTML)))];
     }
 
     let modalScores = document.querySelectorAll('.modal-scores');
     for (let i = 0; i < modalScores.length; i++) {
       let innerContent = modalScores[i].innerHTML;
+      // cleans all non-digits characters
       innerContent = parseFloat(innerContent.replace(/[^\d.-]/g, ''));
       modalScores[i].style.backgroundColor = colorScale[scoreRange(scaleToLikert(innerContent))];
     }
 
+    // fills both color and background of usability level tags
     let usabilityLevels = document.querySelectorAll('.usability-levels');
     for (let i = 0; i < usabilityLevels.length; i++) {
       let color = colorScale[i % 5];
