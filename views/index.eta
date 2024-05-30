@@ -1,22 +1,6 @@
 <% layout("./generaltemplate") %>
 
-<div class="w3-bar w3-top w3-black w3-large" style="z-index:12">
-  <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i></button>
-  <a href="/"><span class="w3-bar-item w3-right">UAX</span></a>
-</div>
-
-<!-- Sidebar/menu -->
-<nav class="w3-sidebar w3-collapse w3-white w3-animate-left" style="z-index:3;width:300px;" id="mySidebar"><br>
-  <div class="w3-bar-block">
-    <a href="#overview" class="w3-bar-item w3-button w3-padding w3-round"><i class="fa fa-tachometer fa-fw"></i>
-      APIs Overview</a>
-    <a href="#metrics" class="w3-bar-item w3-button w3-padding w3-round"><i class="fa fa-bar-chart fa-fw"></i>
-      Metrics</a>
-  </div>
-</nav>
-
-<!-- Overlay effect when opening sidebar on small screens -->
-<div class="w3-overlay w3-hide-large w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+<%~ include("./sidebar", {sidebarOptions: [["overview", "APIs Overview"], ["metrics", "Metrics"]]}) %>
 
 <% function rowDivision(keysChunks){ switch(keysChunks.length){ case 2: return 'w3-half' ; case 3: return 'w3-third' ;
     default: return '' ; } } %>
@@ -56,7 +40,7 @@
                         [...it.resultsProject[key]].sort((a,b) => (b.score || b.usabilityResult.score) - (a.score || a.usabilityResult.score)); %>
                     <p><b>Best Metric:</b> <%= orderedResults[0].metric %></p>
                     <p><b>Worst Metric:</b> <%= orderedResults[orderedResults.length - 1].metric %></p>
-                    
+
                   </div>
                   <div class="w3-half">
                     <%
@@ -94,34 +78,10 @@
 </div>
 
 <script>
-  // Get the Sidebar
-  var mySidebar = document.getElementById("mySidebar");
-
-  // Get the DIV with overlay effect
-  var overlayBg = document.getElementById("myOverlay");
-
-  // Toggle between showing and hiding the sidebar, and add overlay effect
-  function w3_open() {
-    if (mySidebar.style.display === 'block') {
-      mySidebar.style.display = 'none';
-      overlayBg.style.display = "none";
-    } else {
-      mySidebar.style.display = 'block';
-      overlayBg.style.display = "block";
-    }
-  }
-
-  // Close the sidebar with the close button
-  function w3_close() {
-    mySidebar.style.display = "none";
-    overlayBg.style.display = "none";
-  }
-</script>
-
-<script>
   document.addEventListener('DOMContentLoaded', () => {
     let options, chart;
 
+    // inserts the overview charts
     <% Object.keys(it.resultsProject).forEach(projectKey => { %>
     options = {
       chart: {
