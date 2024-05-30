@@ -4,7 +4,7 @@
     
     <% it.sidebarOptions.forEach((opt, i) => { %>
     <a href="#<%= opt[0] %>" class="w3-bar-item w3-button w3-padding w3-round">
-      <i class="fa <%= i == 1 ? 'fa-tachometer' : 'fa-bar-chart' %> fa-fw"></i> <%= opt[1]%>
+      <i class="fa <%= i == 0 ? 'fa-tachometer' : 'fa-bar-chart' %> fa-fw"></i> <%= opt[1]%>
     </a>
     <% }); %>
 

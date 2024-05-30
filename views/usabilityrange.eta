@@ -7,3 +7,14 @@
   <span class="w3-tag w3-small usability-levels">tag</span>
   <b> Very high usability</b>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // fills both color and background of usability level tags
+    let usabilityLevels = document.querySelectorAll('.usability-levels');
+    for (let i = 0; i < usabilityLevels.length; i++) {
+      let color = colorScale[i % 5];
+      usabilityLevels[i].style.color = usabilityLevels[i].style.backgroundColor = color;
+    }
+  });
+</script>

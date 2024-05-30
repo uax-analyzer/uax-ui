@@ -1,0 +1,205 @@
+<% layout("./generaltemplate") %>
+
+<% layout("./generaltemplate") %>
+
+<%~ include("./sidebar",
+{sidebarOptions: [["overview", "API Overview"],
+...Object.keys(it.resultsMetric).map(metric => [metric, metric])]}) %>
+
+<!-- Main section -->
+<div class="w3-main" style="margin-left:300px;margin-top:43px;padding-top:7px;">
+
+  <div class="w3-row-padding w3-margin-bottom">
+
+    <div id="overview" class="w3-container w3-white w3-text-grey w3-card-4 w3-padding-16 w3-round">
+      <div class="w3-container">
+        <div class="w3-row">
+
+          <div class="w3-half w3-container w3-center">
+            <h2 class="w3-text-grey w3-padding-16"><%= it.api %></h2>
+            <!-- radial bar -->
+            <div id="overall-score"></div>
+            <% let orderedResults =
+                        [...it.resultsProject].sort((a,b) => (b.score || b.usabilityResult.score) - (a.score || a.usabilityResult.score)); %>
+            <p><b>Best Metric:</b> <a href="#<%= orderedResults[0].metric %>"><%= orderedResults[0].metric %></a></p>
+            <p><b>Worst Metric:</b> <a href="#<%= orderedResults[orderedResults.length - 1].metric %>"><%= orderedResults[orderedResults.length - 1].metric %></a></p>
+          </div>
+
+          <div class="w3-half">
+            <%
+                    it.resultsProject.forEach(metricResult => {
+                    let score = (metricResult.score || metricResult.usabilityResult.score);
+                    let transformedScore = (score * 100).toFixed(2);
+                    %>
+            <p><%= metricResult.metric %></p>
+            <div class="w3-light-grey w3-round-xlarge w3-small">
+              <div class="w3-container w3-center w3-round-xlarge w3-text-white metrics-overall-scores" style="width:<%= transformedScore%>%; font-weight: bold;"><%= score.toFixed(2) %></div>
+            </div>
+            <%});%>
+          </div>
+        </div>
+        <div class="w3-padding-16"> <%~ include("./usabilityrange")%> </div>
+      </div>
+    </div>
+
+    <div class="w3-container w3-card w3-white w3-margin-top w3-padding-16 w3-round" id="metrics">
+      <div class="w3-container">
+
+        <% Object.keys(it.resultsMetric).forEach(metric => { %>
+
+        <button onclick="myFunction('<%= metric %>')" class="w3-button w3-light-grey w3-block w3-left-align"> <%= metric %></button>
+
+        <div id="<%= metric %>" class="w3-hide w3-show">
+          <div class="w3-row">
+            <div class="w3-half w3-container w3-center">
+              <div id="overall-<%= metric %>"></div>
+            </div>
+            <div class="w3-half">
+              <p class="w3-animate-zoom"><%= it.metricDescription.get(metric) %></p>
+            </div>
+
+          </div>
+          <hr />
+        </div>
+
+        <% });%>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let options, chart;
+
+    options = {
+      chart: {
+        height: 380,
+        type: "radialBar"
+      },
+      series: [<%= (it.projectScore * 100).toFixed(2) %>],
+      colors: [colorScale[scoreRange(scaleToLikert(<%= it.projectScore %>))]],
+      plotOptions: {
+        radialBar: {
+          startAngle: -135,
+          endAngle: 135,
+          track: {
+            startAngle: -135,
+            endAngle: 135,
+          },
+          dataLabels: {
+            name: {
+              show: true,
+            },
+            value: {
+              fontSize: "30px",
+              show: true,
+              formatter: function(val) {
+                return <%= (it.projectScore).toFixed(2) %>;
+              }
+            }
+          }
+        }
+      },
+      stroke: {
+        lineCap: "butt",
+      },
+      labels: [levelScale[scoreRange(scaleToLikert(<%= it.projectScore %>))]],
+      responsive: [{
+        breakpoint: 1060,
+        options: {
+          plotOptions: {
+            radialBar: {
+              dataLabels: {
+                name: {
+                  show: false,
+                },
+                value: {
+                  fontSize: "17px",
+                  show: true
+                }
+              }
+            }
+          }
+        }
+      }]
+    };
+
+    chart = new ApexCharts(document.getElementById("overall-score"), options);
+
+    chart.render();
+
+    <%
+      it.resultsProject.forEach(metricResult =>{ 
+      const metricScore = metricResult.score || metricResult.usabilityResult.score;
+    %>
+    options = {
+      chart: {
+        height: 380,
+        type: "radialBar"
+      },
+      series: [<%= ( metricScore * 100).toFixed(2) %>],
+      colors: [colorScale[scoreRange(scaleToLikert(<%= metricScore %>))]],
+      plotOptions: {
+        radialBar: {
+          startAngle: -135,
+          endAngle: 135,
+          track: {
+            startAngle: -135,
+            endAngle: 135,
+          },
+          dataLabels: {
+            name: {
+              show: true,
+            },
+            value: {
+              fontSize: "30px",
+              show: true,
+              formatter: function(val) {
+                return <%= metricScore.toFixed(2) %>;
+              }
+            }
+          }
+        }
+      },
+      stroke: {
+        lineCap: "butt",
+      },
+      labels: [levelScale[scoreRange(scaleToLikert(<%= metricScore %>))]],
+      responsive: [{
+        breakpoint: 1060,
+        options: {
+          plotOptions: {
+            radialBar: {
+              dataLabels: {
+                name: {
+                  show: false,
+                },
+                value: {
+                  fontSize: "17px",
+                  show: true
+                }
+              }
+            }
+          }
+        }
+      }]
+    };
+
+    chart = new ApexCharts(document.getElementById("overall-<%= metricResult.metric %>"), options);
+
+    chart.render();
+
+    <% }); %>
+
+    let metricsOveralScores = document.querySelectorAll('.metrics-overall-scores');
+    for (let i = 0; i < metricsOveralScores.length; i++) {
+      let innerContent = metricsOveralScores[i].innerHTML;
+      // cleans all non-digits characters
+      innerContent = parseFloat(innerContent.replace(/[^\d.-]/g, ''));
+      metricsOveralScores[i].style.backgroundColor = colorScale[scoreRange(scaleToLikert(innerContent))];
+    }
+
+  });
+</script>
