@@ -20,20 +20,30 @@
             <!-- radial bar -->
             <div id="overall-score"></div>
             <% let orderedResults =
-                        [...it.resultsProject].sort((a,b) => (b.score || b.usabilityResult.score) - (a.score || a.usabilityResult.score)); %>
-            <p><b>Best Metric:</b> <a href="#<%= orderedResults[0].metric %>"><%= orderedResults[0].metric %></a></p>
-            <p><b>Worst Metric:</b> <a href="#<%= orderedResults[orderedResults.length - 1].metric %>"><%= orderedResults[orderedResults.length - 1].metric %></a></p>
+                        [...it.resultsProject].sort((a,b) => b.usability.score - a.usability.score); %>
+            <p><b>Best Metric:</b>
+              <a href="#<%= orderedResults[0].metricName %>" class="nodecoration">
+                <%= orderedResults[0].metricName %>
+              </a>
+            </p>
+            <p><b>Worst Metric:</b>
+              <a href="#<%= orderedResults[orderedResults.length - 1].metricName %>" class="nodecoration">
+                <%= orderedResults[orderedResults.length - 1].metricName %>
+              </a>
+            </p>
           </div>
 
           <div class="w3-half">
             <%
                     it.resultsProject.forEach(metricResult => {
-                    let score = (metricResult.score || metricResult.usabilityResult.score);
+                    let score = metricResult.usability.score;
                     let transformedScore = (score * 100).toFixed(2);
                     %>
-            <p><%= metricResult.metric %></p>
+            <p><a href="#<%= metricResult.metricName %>" class="nodecoration"><%= metricResult.metricName %></a></p>
             <div class="w3-light-grey w3-round-xlarge w3-small">
-              <div class="w3-container w3-center w3-round-xlarge w3-text-white metrics-overall-scores" style="width:<%= transformedScore%>%; font-weight: bold;"><%= score.toFixed(2) %></div>
+              <div class="w3-container w3-center w3-round-xlarge w3-text-white metrics-overall-scores" style="width:<%= transformedScore%>%; font-weight: bold;">
+                <%= score.toFixed(2) %>
+              </div>
             </div>
             <%});%>
           </div>
@@ -57,7 +67,6 @@
             <div class="w3-half">
               <p class="w3-animate-zoom"><%= it.metricDescription.get(metric) %></p>
             </div>
-
           </div>
           <hr />
         </div>
@@ -132,7 +141,7 @@
 
     <%
       it.resultsProject.forEach(metricResult =>{ 
-      const metricScore = metricResult.score || metricResult.usabilityResult.score;
+      const metricScore = metricResult.usability.score;
     %>
     options = {
       chart: {
@@ -187,8 +196,7 @@
       }]
     };
 
-    chart = new ApexCharts(document.getElementById("overall-<%= metricResult.metric %>"), options);
-
+    chart = new ApexCharts(document.getElementById("overall-<%= metricResult.metricName %>"), options);
     chart.render();
 
     <% }); %>

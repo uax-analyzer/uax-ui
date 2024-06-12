@@ -4,21 +4,21 @@ import path from 'path';
 
 import { Command } from 'commander';
 import _ from 'lodash';
-
 import { mean } from 'mathjs';
 
 import { createRoutes } from './server/app.js';
 
-const PORT = 3000;
 const program = new Command();
 
 program
-  .requiredOption('-p, --path <dir>', 'the path pointing to the JSON folder')
+  .requiredOption('-i, --input-path <dir>', 'the path pointing to the JSON folder')
+  .option('-p, --port <number>', 'the server port', 3000)
   .parse();
 
-const jsonLocationPath = program.opts().path;
+const jsonLocationPath = program.opts().inputPath;
+const PORT = program.opts().port;
 
-let jsonContent = await loadJSONFiles(jsonLocationPath);
+const jsonContent = await loadJSONFiles(jsonLocationPath);
 
 const app = createRoutes(processJSONFiles(jsonContent));
 
@@ -49,9 +49,9 @@ async function loadJSONFiles(jsonLocationPath) {
 }
 
 function processJSONFiles(jsonContent) {
-  let resultsProject = _.groupBy(jsonContent, content => content.projectName);
-  let projectScores = Object.fromEntries(Object.keys(resultsProject).map(key =>
-    ([key, mean(resultsProject[key].map(metric => metric.score || metric.usabilityResult.score)) ])));
-  let resultsMetric = _.groupBy(jsonContent, content => content.metric);
+  const resultsProject = _.groupBy(jsonContent, content => content.projectName);
+  const projectScores = Object.fromEntries(Object.keys(resultsProject).map(key =>
+    ([key, mean(resultsProject[key].map(metric => metric.usability.score)) ])));
+  const resultsMetric = _.groupBy(jsonContent, content => content.metricName);
   return [resultsProject, projectScores, resultsMetric];
 }

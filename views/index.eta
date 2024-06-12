@@ -11,26 +11,51 @@
   <div class="w3-row-padding w3-margin-bottom">
     <div id="overview">
       <div class="w3-container w3-white w3-text-grey w3-card-4 w3-padding-16 w3-round">
-        <div class="w3-row">
-          <% it.chunkOfKeys.forEach(function(chunk) { let chunkClass=rowDivision(chunk); chunk.forEach(function(key)
-              {%>
-          <div class="w3-container w3-center <%= chunkClass %>">
-            <h3><b> <%= key %> </b></h3>
-            <div id="overview-chart-<%= key %>"></div>
-            <a class="w3-button w3-white w3-large" style="padding-top:0;" href="/<%= key %>">
-              <b class="scores"><%= it.projectScores[key].toFixed(2) %> <i class="fa fa-external-link w3-tiny"></i></b>
-            </a>
-            <p style="margin-top: 0;">Overall score</p>
+        <div class="w3-row w3-display-container">
+          <div class="w3-half">
+            <div id="overall-radial"></div>
           </div>
-          
-          <% }); }); %>
+          <div class="w3-half">
+            <%
+              let keysSorted = Object.keys(it.projectScores).sort((a,b) => it.projectScores[b] - it.projectScores[a]);
+              keysSorted.forEach(project =>{
+              let score = it.projectScores[project];
+              let transformedScore = (score * 100).toFixed(2);
+            %>
+            <p><b><%= project %></b></p>
+            <div class="w3-light-grey w3-round-xlarge w3-small">
+              <div class="w3-container w3-center w3-round-xlarge w3-text-white overall-scores" style="width:<%= transformedScore%>%; font-weight: bold;">
+                <%= score.toFixed(2) %>
+              </div>
+            </div>
+            <% });%>
+
+          </div>
+
+          <div class="w3-display-bottomright" style="right: 80px"><%~ include("./usabilityrange")%></div>
         </div>
-        <%~ include("./usabilityrange")%>
       </div>
     </div>
 
+    <div class="w3-container w3-row" style="padding: 0;">
+      <% it.chunkOfKeys.forEach(function(chunk) { let chunkClass=rowDivision(chunk); chunk.forEach(function(key, i)
+              {%>
+      <div class="w3-center <%= chunkClass %>">
+        <div class="w3-card w3-white w3-text-grey w3-round <%= i != 0 ? 'w3-margin-left' : '' %>">
+          <h3><b> <%= key %> </b></h3>
+          <div id="overview-chart-<%= key %>"></div>
+          <a class="w3-button w3-white w3-large" style="padding-top:0;" href="/<%= key %>">
+            <b class="scores"><%= it.projectScores[key].toFixed(2) %> <i class="fa fa-external-link w3-tiny"></i></b>
+          </a>
+          <p style="margin-top: 0;">Overall score</p>
+        </div>
+      </div>
 
-    <div class="w3-container w3-card w3-white w3-margin-top w3-padding-16 w3-round" id="metrics">
+      <% }); }); %>
+
+    </div>
+
+    <div class="w3-container w3-card w3-white w3-padding-16 w3-round" id="metrics">
       <div class="w3-container">
         <h5 class="w3-opacity"><b> Metrics </b></h5>
         <div id="metrics-chart"></div>
@@ -44,17 +69,17 @@
   document.addEventListener('DOMContentLoaded', () => {
     let options, chart;
 
-    // inserts the overview charts
+    // inserts the overview API charts
     <% Object.keys(it.resultsProject).forEach(projectKey => { %>
     options = {
       chart: {
         type: 'radar',
-        height: '200px',
-        parentHeightOffset: 0,
+        height: '250px',
+        parentHeightOffset: 0
       },
       markers: {
         discrete: [<%= it.resultsProject[projectKey]
-                .map(metricResult => metricResult.score || metricResult.usabilityResult.score).join(',') %>]
+                .map(metricResult => metricResult.usability.score).join(',') %>]
           .map((score, i) => {
             return {
               seriesIndex: 0,
@@ -69,12 +94,12 @@
       series: [{
         name: "<%= projectKey %>",
         data: [<%= it.resultsProject[projectKey]
-                .map(metricResult => metricResult.score || metricResult.usabilityResult.score).join(',') %>]
+                .map(metricResult => metricResult.usability.score).join(',') %>]
       }],
       yaxis: {
         show: false
       },
-      labels: [<% ~ "\'" + it.resultsProject[projectKey].map(metricResult => metricResult.metric).join("\',\'") + "\'" %>]
+      labels: [<% ~ "\'" + it.resultsProject[projectKey].map(metricResult => metricResult.metricName).join("\',\'") + "\'" %>]
     };
 
     chart = new ApexCharts(document.getElementById("overview-chart-<%= projectKey %>"), options);
@@ -106,8 +131,8 @@
           name: '<%= projectKey %>',
           data: [
             <% it.resultsProject[projectKey].forEach(metricResult => { %> {
-              x: '<%= metricResult.metric %>',
-              y: <%= (metricResult.score || metricResult.usabilityResult.score) %>
+              x: '<%= metricResult.metricName %>',
+              y: <%= metricResult.usability.score %>
             },
             <% });%>
           ]
@@ -126,8 +151,54 @@
     }
 
     chart = new ApexCharts(document.getElementById("metrics-chart"), options);
-
     chart.render();
+
+    options = {
+      chart: {
+        height: 350,
+        type: "radialBar",
+      },
+      series: [<%= Object.values(it.projectScores).map(x => x * 100).join(",") %>],
+      plotOptions: {
+        radialBar: {
+          <% /* startAngle: -135,
+          endAngle: 135,
+          track: {
+            startAngle: -135,
+            endAngle: 135,
+          }, */ %>
+          dataLabels: {
+            value: {
+              fontSize: "30px",
+              show: true,
+              formatter: function(val) {
+                return (val / 100).toFixed(2);
+              }
+            },
+            total: {
+              show: true,
+              label: 'Average',
+              color: colorScale[scoreRange(scaleToLikert(<%= (Object.values(it.projectScores).reduce((a, b) => (a + b), 0) / Object.values(it.projectScores).length).toFixed(2) %>))],
+              formatter: function(val) {
+                return <%= (Object.values(it.projectScores).reduce((a, b) => (a + b), 0) / Object.values(it.projectScores).length).toFixed(2)  %>
+              }
+            }
+          }
+        }
+      },
+      labels: ["<%~ Object.keys(it.projectScores).join('\",\"') %>"]
+    };
+
+    chart = new ApexCharts(document.getElementById("overall-radial"), options);
+    chart.render();
+
+    let apisOverallScores = document.querySelectorAll('.overall-scores');
+    for (let i = 0; i < apisOverallScores.length; i++) {
+      let innerContent = apisOverallScores[i].innerHTML;
+      // cleans all non-digits characters
+      innerContent = parseFloat(innerContent.replace(/[^\d.-]/g, ''));
+      apisOverallScores[i].style.backgroundColor = colorScale[scoreRange(scaleToLikert(innerContent))];
+    }
 
     // changes colors of the API scores in the main page
     let overallScores = document.querySelectorAll('.scores');
