@@ -1,10 +1,10 @@
 <div class="w3-row w3-center">
   <b>Very low usability </b>
-  <span class="w3-tag w3-small usability-levels">tag</span>
-  <span class="w3-tag w3-small usability-levels">tag</span>
-  <span class="w3-tag w3-small usability-levels">tag</span>
-  <span class="w3-tag w3-small usability-levels">tag</span>
-  <span class="w3-tag w3-small usability-levels">tag</span>
+  <span class="w3-tag w3-small usability-levels tooltip">tag<span class="tooltiptext">Very low</span></span>
+  <span class="w3-tag w3-small usability-levels tooltip">tag<span class="tooltiptext">Low</span></span>
+  <span class="w3-tag w3-small usability-levels tooltip">tag<span class="tooltiptext">Moderate</span></span>
+  <span class="w3-tag w3-small usability-levels tooltip">tag<span class="tooltiptext">High</span></span>
+  <span class="w3-tag w3-small usability-levels tooltip">tag<span class="tooltiptext">Very high</span></span>
   <b> Very high usability</b>
 </div>
 
